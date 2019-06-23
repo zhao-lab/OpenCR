@@ -27,7 +27,7 @@ void setup()
 
   // Initialize ROS node handle, advertise and subscribe the topics
   nh.initNode();
-  nh.getHardware()->setBaud(115200);
+  nh.getHardware()->setBaud(1000000);
 
   nh.subscribe(cmd_vel_sub);
   nh.subscribe(sound_sub);
@@ -82,11 +82,7 @@ void loop()
   if ((t-tTime[0]) >= (1000 / CONTROL_MOTOR_SPEED_FREQUENCY))
   {
     updateGoalVelocity();
-    if ((t-tTime[6]) > CONTROL_MOTOR_TIMEOUT) {
-      motor_driver.controlMotor(WHEEL_RADIUS, WHEEL_SEPARATION, zero_velocity);
-    } else {
-      motor_driver.controlMotor(WHEEL_RADIUS, WHEEL_SEPARATION, goal_velocity);
-    }
+    motor_driver.controlMotor(WHEEL_RADIUS, WHEEL_SEPARATION, goal_velocity);
     tTime[0] = t;
   }
 
@@ -167,7 +163,6 @@ void commandVelocityCallback(const geometry_msgs::Twist& cmd_vel_msg)
 
   goal_velocity_from_cmd[LINEAR]  = constrain(goal_velocity_from_cmd[LINEAR],  MIN_LINEAR_VELOCITY, MAX_LINEAR_VELOCITY);
   goal_velocity_from_cmd[ANGULAR] = constrain(goal_velocity_from_cmd[ANGULAR], MIN_ANGULAR_VELOCITY, MAX_ANGULAR_VELOCITY);
-  tTime[6] = millis();
 }
 
 /*******************************************************************************
@@ -258,10 +253,10 @@ void publishSensorStateMsg(void)
   sensor_state_msg.header.stamp = rosNow();
   sensor_state_msg.battery = sensors.checkVoltage();
 
-  dxl_comm_result = motor_driver.readEncoder(sensor_state_msg.left_encoder, sensor_state_msg.right_encoder);
+  dxl_comm_result = motor_driver.readEncoder(sensor_state_msg.front_left_encoder, sensor_state_msg.front_right_encoder, sensor_state_msg.back_left_encoder, sensor_state_msg.back_right_encoder);
 
   if (dxl_comm_result == true)
-    updateMotorInfo(sensor_state_msg.left_encoder, sensor_state_msg.right_encoder);
+    updateMotorInfo(sensor_state_msg.front_left_encoder, sensor_state_msg.front_right_encoder, sensor_state_msg.back_left_encoder, sensor_state_msg.back_right_encoder);
   else
     return;
 
@@ -424,15 +419,19 @@ void updateOdometry(void)
 *******************************************************************************/
 void updateJointStates(void)
 {
-  static float joint_states_pos[WHEEL_NUM] = {0.0, 0.0};
-  static float joint_states_vel[WHEEL_NUM] = {0.0, 0.0};
-  //static float joint_states_eff[WHEEL_NUM] = {0.0, 0.0};
+  static float joint_states_pos[WHEEL_NUM] = {0.0, 0.0, 0.0, 0.0};
+  static float joint_states_vel[WHEEL_NUM] = {0.0, 0.0, 0.0, 0.0};
+  //static float joint_states_eff[WHEEL_NUM] = {0.0, 0.0, 0.0, 0.0};
 
-  joint_states_pos[LEFT]  = last_rad[LEFT];
-  joint_states_pos[RIGHT] = last_rad[RIGHT];
+  joint_states_pos[FRONT_LEFT]  = last_rad[FRONT_LEFT];
+  joint_states_pos[FRONT_RIGHT] = last_rad[FRONT_RIGHT];
+  joint_states_pos[BACK_LEFT]  = last_rad[BACK_LEFT];
+  joint_states_pos[BACK_RIGHT] = last_rad[BACK_RIGHT];
 
-  joint_states_vel[LEFT]  = last_velocity[LEFT];
-  joint_states_vel[RIGHT] = last_velocity[RIGHT];
+  joint_states_vel[FRONT_LEFT]  = last_velocity[FRONT_LEFT];
+  joint_states_vel[FRONT_RIGHT] = last_velocity[FRONT_RIGHT];
+  joint_states_vel[BACK_LEFT]  = last_velocity[BACK_LEFT];
+  joint_states_vel[BACK_RIGHT] = last_velocity[BACK_RIGHT];
 
   joint_states.position = joint_states_pos;
   joint_states.velocity = joint_states_vel;
@@ -454,10 +453,10 @@ void updateTF(geometry_msgs::TransformStamped& odom_tf)
 /*******************************************************************************
 * Update motor information
 *******************************************************************************/
-void updateMotorInfo(int32_t left_tick, int32_t right_tick)
+void updateMotorInfo(int32_t front_left_tick, int32_t front_right_tick, int32_t back_left_tick, int32_t back_right_tick)
 {
   int32_t current_tick = 0;
-  static int32_t last_tick[WHEEL_NUM] = {0, 0};
+  static int32_t last_tick[WHEEL_NUM] = {0, 0, 0, 0};
   
   if (init_encoder)
   {
@@ -470,24 +469,38 @@ void updateMotorInfo(int32_t left_tick, int32_t right_tick)
       last_velocity[index]  = 0.0;
     }  
 
-    last_tick[LEFT] = left_tick;
-    last_tick[RIGHT] = right_tick;
+    last_tick[FRONT_LEFT] = front_left_tick;
+    last_tick[FRONT_RIGHT] = front_right_tick;
+    last_tick[BACK_LEFT] = back_left_tick;
+    last_tick[BACK_RIGHT] = back_right_tick;
 
     init_encoder = false;
     return;
   }
 
-  current_tick = left_tick;
+  current_tick = front_left_tick;
 
-  last_diff_tick[LEFT] = current_tick - last_tick[LEFT];
-  last_tick[LEFT]      = current_tick;
-  last_rad[LEFT]       += TICK2RAD * (double)last_diff_tick[LEFT];
+  last_diff_tick[FRONT_LEFT] = current_tick - last_tick[FRONT_LEFT];
+  last_tick[FRONT_LEFT]      = current_tick;
+  last_rad[FRONT_LEFT]       += TICK2RAD * (double)last_diff_tick[FRONT_LEFT];
 
-  current_tick = right_tick;
+  current_tick = front_right_tick;
 
-  last_diff_tick[RIGHT] = current_tick - last_tick[RIGHT];
-  last_tick[RIGHT]      = current_tick;
-  last_rad[RIGHT]       += TICK2RAD * (double)last_diff_tick[RIGHT];
+  last_diff_tick[FRONT_RIGHT] = current_tick - last_tick[FRONT_RIGHT];
+  last_tick[FRONT_RIGHT]      = current_tick;
+  last_rad[FRONT_RIGHT]       += TICK2RAD * (double)last_diff_tick[FRONT_RIGHT];
+
+  current_tick = back_left_tick;
+
+  last_diff_tick[BACK_LEFT] = current_tick - last_tick[BACK_LEFT];
+  last_tick[BACK_LEFT]      = current_tick;
+  last_rad[BACK_LEFT]       += TICK2RAD * (double)last_diff_tick[BACK_LEFT];
+
+  current_tick = back_right_tick;
+
+  last_diff_tick[BACK_RIGHT] = current_tick - last_tick[BACK_RIGHT];
+  last_tick[BACK_RIGHT]      = current_tick;
+  last_rad[BACK_RIGHT]       += TICK2RAD * (double)last_diff_tick[BACK_RIGHT];
 }
 
 /*******************************************************************************
@@ -495,14 +508,16 @@ void updateMotorInfo(int32_t left_tick, int32_t right_tick)
 *******************************************************************************/
 bool calcOdometry(double diff_time)
 {
+  //TODO - currently not complete, probably not functional.
+  
   float* orientation;
-  double wheel_l, wheel_r;      // rotation value of wheel [rad]
+  double wheel_fl, wheel_fr, wheel_bl, wheel_br;      // rotation value of wheel [rad]
   double delta_s, theta, delta_theta;
   static double last_theta = 0.0;
   double v, w;                  // v = translational velocity [m/s], w = rotational velocity [rad/s]
   double step_time;
 
-  wheel_l = wheel_r = 0.0;
+  wheel_fl = wheel_fr = wheel_bl = wheel_br = 0.0;
   delta_s = delta_theta = theta = 0.0;
   v = w = 0.0;
   step_time = 0.0;
@@ -512,17 +527,25 @@ bool calcOdometry(double diff_time)
   if (step_time == 0)
     return false;
 
-  wheel_l = TICK2RAD * (double)last_diff_tick[LEFT];
-  wheel_r = TICK2RAD * (double)last_diff_tick[RIGHT];
+  wheel_fl = TICK2RAD * (double)last_diff_tick[FRONT_LEFT];
+  wheel_fr = TICK2RAD * (double)last_diff_tick[FRONT_RIGHT];
+  wheel_bl = TICK2RAD * (double)last_diff_tick[BACK_LEFT];
+  wheel_br = TICK2RAD * (double)last_diff_tick[BACK_RIGHT];
 
-  if (isnan(wheel_l))
-    wheel_l = 0.0;
+  if (isnan(wheel_fl))
+    wheel_fl = 0.0;
 
-  if (isnan(wheel_r))
-    wheel_r = 0.0;
+  if (isnan(wheel_fr))
+    wheel_fr = 0.0;
 
-  delta_s     = WHEEL_RADIUS * (wheel_r + wheel_l) / 2.0;
-  // theta = WHEEL_RADIUS * (wheel_r - wheel_l) / WHEEL_SEPARATION;  
+  if (isnan(wheel_bl))
+    wheel_bl = 0.0;
+
+  if (isnan(wheel_br))
+    wheel_br = 0.0;
+
+  delta_s     = WHEEL_RADIUS * (wheel_fr + wheel_fl) / 2.0; //TODO
+  // theta = WHEEL_RADIUS * (wheel_fr - wheel_fl) / WHEEL_SEPARATION;  
   orientation = sensors.getOrientation();
   theta       = atan2f(orientation[1]*orientation[2] + orientation[0]*orientation[3], 
                 0.5f - orientation[2]*orientation[2] - orientation[3]*orientation[3]);
@@ -543,8 +566,11 @@ bool calcOdometry(double diff_time)
   odom_vel[1] = 0.0;
   odom_vel[2] = w;
 
-  last_velocity[LEFT]  = wheel_l / step_time;
-  last_velocity[RIGHT] = wheel_r / step_time;
+  last_velocity[FRONT_LEFT]  = wheel_fl / step_time;
+  last_velocity[FRONT_RIGHT] = wheel_fr / step_time;
+  last_velocity[BACK_LEFT]  = wheel_bl / step_time;
+  last_velocity[BACK_RIGHT] = wheel_br / step_time;
+  
   last_theta = theta;
 
   return true;
@@ -556,31 +582,31 @@ bool calcOdometry(double diff_time)
 void driveTest(uint8_t buttons)
 {
   static bool move[2] = {false, false};
-  static int32_t saved_tick[2] = {0, 0};
+  static int32_t saved_tick[WHEEL_NUM] = {0, 0, 0, 0};
   static double diff_encoder = 0.0;
 
-  int32_t current_tick[2] = {0, 0};
+  int32_t current_tick[WHEEL_NUM] = {0, 0, 0, 0};
 
-  motor_driver.readEncoder(current_tick[LEFT], current_tick[RIGHT]);
+  motor_driver.readEncoder(current_tick[FRONT_LEFT], current_tick[FRONT_RIGHT], current_tick[BACK_LEFT], current_tick[BACK_RIGHT]);
 
   if (buttons & (1<<0))  
   {
     move[LINEAR] = true;
-    saved_tick[RIGHT] = current_tick[RIGHT];
+    saved_tick[FRONT_RIGHT] = current_tick[FRONT_RIGHT];
 
     diff_encoder = TEST_DISTANCE / (0.207 / 4096); // (Circumference of Wheel) / (The number of tick per revolution)
   }
   else if (buttons & (1<<1))
   {
     move[ANGULAR] = true;
-    saved_tick[RIGHT] = current_tick[RIGHT];
+    saved_tick[FRONT_RIGHT] = current_tick[FRONT_RIGHT];
 
     diff_encoder = (TEST_RADIAN * TURNING_RADIUS) / (0.207 / 4096);
   }
 
   if (move[LINEAR])
   {    
-    if (abs(saved_tick[RIGHT] - current_tick[RIGHT]) <= diff_encoder)
+    if (abs(saved_tick[FRONT_RIGHT] - current_tick[FRONT_RIGHT]) <= diff_encoder)
     {
       goal_velocity_from_button[LINEAR]  = 0.05;
     }
@@ -592,7 +618,7 @@ void driveTest(uint8_t buttons)
   }
   else if (move[ANGULAR])
   {   
-    if (abs(saved_tick[RIGHT] - current_tick[RIGHT]) <= diff_encoder)
+    if (abs(saved_tick[FRONT_RIGHT] - current_tick[FRONT_RIGHT]) <= diff_encoder)
     {
       goal_velocity_from_button[ANGULAR]= -0.7;
     }
@@ -780,7 +806,7 @@ void initOdom(void)
 *******************************************************************************/
 void initJointStates(void)
 {
-  static char *joint_states_name[] = {(char*)"wheel_left_joint", (char*)"wheel_right_joint"};
+  static char *joint_states_name[] = {(char*)"wheel_front_left_joint", (char*)"wheel_front_right_joint", (char*)"wheel_back_left_joint", (char*)"wheel_back_right_joint"};
 
   joint_states.header.frame_id = joint_state_header_frame_id;
   joint_states.name            = joint_states_name;
@@ -834,11 +860,16 @@ void sendDebuglog(void)
   DEBUG_SERIAL.println("---------------------------------------");
   DEBUG_SERIAL.println("Torque : " + String(motor_driver.getTorque()));
 
-  int32_t encoder[WHEEL_NUM] = {0, 0};
-  motor_driver.readEncoder(encoder[LEFT], encoder[RIGHT]);
+  int32_t encoder[WHEEL_NUM] = {0, 0, 0, 0};
+  motor_driver.readEncoder(encoder[FRONT_LEFT], encoder[FRONT_RIGHT], encoder[BACK_LEFT], encoder[BACK_RIGHT]);
+
+  DEBUG_SERIAL.println("Encoder(front left / back left) : " + String(encoder[FRONT_LEFT]));
+  DEBUG_SERIAL.println("Encoder(front right / back right) : " + String(encoder[FRONT_RIGHT]));
   
-  DEBUG_SERIAL.println("Encoder(left) : " + String(encoder[LEFT]));
-  DEBUG_SERIAL.println("Encoder(right) : " + String(encoder[RIGHT]));
+  // DEBUG_SERIAL.println("Encoder(front left) : " + String(encoder[FRONT_LEFT]));
+  // DEBUG_SERIAL.println("Encoder(front right) : " + String(encoder[FRONT_RIGHT]));
+  // DEBUG_SERIAL.println("Encoder(back left) : " + String(encoder[BACK_LEFT]));
+  // DEBUG_SERIAL.println("Encoder(back right) : " + String(encoder[BACK_RIGHT]));
 
   DEBUG_SERIAL.println("---------------------------------------");
   DEBUG_SERIAL.println("TurtleBot3");

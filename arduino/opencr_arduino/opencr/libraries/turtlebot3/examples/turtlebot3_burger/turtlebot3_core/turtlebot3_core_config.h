@@ -1,3 +1,4 @@
+
 /*******************************************************************************
 * Copyright 2016 ROBOTIS CO., LTD.
 *
@@ -34,7 +35,8 @@
 #include <tf/transform_broadcaster.h>
 #include <nav_msgs/Odometry.h>
 
-#include <turtlebot3_msgs/SensorState.h>
+// #include <turtlebot3_msgs/SensorState.h>
+#include <turtlebot3_msgs/SensorState2.h>
 #include <turtlebot3_msgs/Sound.h>
 #include <turtlebot3_msgs/VersionInfo.h>
 
@@ -46,17 +48,18 @@
 #define FIRMWARE_VER "1.2.3"
 
 #define CONTROL_MOTOR_SPEED_FREQUENCY          30   //hz
-#define CONTROL_MOTOR_TIMEOUT                  500  //ms
 #define IMU_PUBLISH_FREQUENCY                  200  //hz
 #define CMD_VEL_PUBLISH_FREQUENCY              30   //hz
 #define DRIVE_INFORMATION_PUBLISH_FREQUENCY    30   //hz
 #define VERSION_INFORMATION_PUBLISH_FREQUENCY  1    //hz 
 #define DEBUG_LOG_FREQUENCY                    10   //hz 
 
-#define WHEEL_NUM                        2
+#define WHEEL_NUM                        4
 
-#define LEFT                             0
-#define RIGHT                            1
+#define FRONT_LEFT                       0
+#define FRONT_RIGHT                      1
+#define BACK_LEFT                        2
+#define BACK_RIGHT                       3       
 
 #define LINEAR                           0
 #define ANGULAR                          1
@@ -91,7 +94,7 @@ ros::Time rosNow(void);
 ros::Time addMicros(ros::Time & t, uint32_t _micros); // deprecated
 
 void updateVariable(bool isConnected);
-void updateMotorInfo(int32_t left_tick, int32_t right_tick);
+void updateMotorInfo(int32_t front_left_tick, int32_t front_right_tick, int32_t back_left_tick, int32_t back_right_tick);
 void updateTime(void);
 void updateOdometry(void);
 void updateJoint(void);
@@ -144,7 +147,8 @@ ros::Subscriber<std_msgs::Empty> reset_sub("reset", resetCallback);
 * Publisher
 *******************************************************************************/
 // Bumpers, cliffs, buttons, encoders, battery of Turtlebot3
-turtlebot3_msgs::SensorState sensor_state_msg;
+// turtlebot3_msgs::SensorState sensor_state_msg;
+turtlebot3_msgs::SensorState2 sensor_state_msg;
 ros::Publisher sensor_state_pub("sensor_state", &sensor_state_msg);
 
 // Version information of Turtlebot3
@@ -190,19 +194,20 @@ static uint32_t tTime[10];
 /*******************************************************************************
 * Declaration for motor
 *******************************************************************************/
-Turtlebot3MotorDriver motor_driver;
+// Turtlebot3MotorDriver motor_driver;
+Turtlebot3MotorDriver2 motor_driver;
 
 /*******************************************************************************
 * Calculation for odometry
 *******************************************************************************/
 bool init_encoder = true;
-int32_t last_diff_tick[WHEEL_NUM] = {0, 0};
-double  last_rad[WHEEL_NUM]       = {0.0, 0.0};
+int32_t last_diff_tick[WHEEL_NUM] = {0, 0, 0, 0};
+double  last_rad[WHEEL_NUM]       = {0.0, 0.0, 0.0, 0.0};
 
 /*******************************************************************************
 * Update Joint State
 *******************************************************************************/
-double  last_velocity[WHEEL_NUM]  = {0.0, 0.0};
+double  last_velocity[WHEEL_NUM]  = {0.0, 0.0, 0.0, 0.0};
 
 /*******************************************************************************
 * Declaration for sensors
@@ -213,11 +218,10 @@ Turtlebot3Sensor sensors;
 * Declaration for controllers
 *******************************************************************************/
 Turtlebot3Controller controllers;
-float zero_velocity[WHEEL_NUM] = {0.0, 0.0};
-float goal_velocity[WHEEL_NUM] = {0.0, 0.0};
-float goal_velocity_from_button[WHEEL_NUM] = {0.0, 0.0};
-float goal_velocity_from_cmd[WHEEL_NUM] = {0.0, 0.0};
-float goal_velocity_from_rc100[WHEEL_NUM] = {0.0, 0.0};
+float goal_velocity[2] = {0.0, 0.0};
+float goal_velocity_from_button[2] = {0.0, 0.0};
+float goal_velocity_from_cmd[2] = {0.0, 0.0};
+float goal_velocity_from_rc100[2] = {0.0, 0.0};
 
 /*******************************************************************************
 * Declaration for diagnosis
