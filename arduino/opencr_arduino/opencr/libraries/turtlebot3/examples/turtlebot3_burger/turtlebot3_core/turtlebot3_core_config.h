@@ -35,8 +35,7 @@
 #include <tf/transform_broadcaster.h>
 #include <nav_msgs/Odometry.h>
 
-// #include <turtlebot3_msgs/SensorState.h>
-#include <turtlebot3_msgs/SensorState2.h>
+#include <turtlebot3_msgs/SensorState.h>
 #include <turtlebot3_msgs/Sound.h>
 #include <turtlebot3_msgs/VersionInfo.h>
 
@@ -147,8 +146,7 @@ ros::Subscriber<std_msgs::Empty> reset_sub("reset", resetCallback);
 * Publisher
 *******************************************************************************/
 // Bumpers, cliffs, buttons, encoders, battery of Turtlebot3
-// turtlebot3_msgs::SensorState sensor_state_msg;
-turtlebot3_msgs::SensorState2 sensor_state_msg;
+turtlebot3_msgs::SensorState sensor_state_msg;
 ros::Publisher sensor_state_pub("sensor_state", &sensor_state_msg);
 
 // Version information of Turtlebot3
@@ -194,8 +192,7 @@ static uint32_t tTime[10];
 /*******************************************************************************
 * Declaration for motor
 *******************************************************************************/
-// Turtlebot3MotorDriver motor_driver;
-Turtlebot3MotorDriver2 motor_driver;
+Turtlebot3MotorDriver motor_driver;
 
 /*******************************************************************************
 * Calculation for odometry

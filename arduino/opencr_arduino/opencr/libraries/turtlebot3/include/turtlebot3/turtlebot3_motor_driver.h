@@ -44,8 +44,10 @@
 
 #define PROTOCOL_VERSION                2.0     // Dynamixel protocol version 2.0
 
-#define DXL_LEFT_ID                     1       // ID of left motor
-#define DXL_RIGHT_ID                    2       // ID of right motor
+#define DXL_FRONT_LEFT_ID                     1       // ID of front left motor
+#define DXL_FRONT_RIGHT_ID                    2       // ID of front right motor
+#define DXL_BACK_LEFT_ID		      3	      // ID of back left motor
+#define DXL_BACK_RIGHT_ID		      4	      // ID of back right motor
 
 #define BAUDRATE                        1000000 // baurd rate of Dynamixel
 #define DEVICENAME                      ""      // no need setting on OpenCR
@@ -72,15 +74,17 @@ class Turtlebot3MotorDriver
   void close(void);
   bool setTorque(bool onoff);
   bool getTorque();
-  bool readEncoder(int32_t &left_value, int32_t &right_value);
-  bool writeVelocity(int64_t left_value, int64_t right_value);
+  bool readEncoder(int32_t &front_left_value, int32_t &front_right_value, int32_t &back_left_value, int32_t &back_right_value);
+  bool writeVelocity(int64_t front_left_value, int64_t front_right_value, int64_t back_left_value, int64_t back_right_value);
   bool controlMotor(const float wheel_radius, const float wheel_separation, float* value);
 
  private:
   uint32_t baudrate_;
   float  protocol_version_;
-  uint8_t left_wheel_id_;
-  uint8_t right_wheel_id_;
+  uint8_t front_left_wheel_id_;
+  uint8_t front_right_wheel_id_;
+  uint8_t back_left_wheel_id_;
+  uint8_t back_right_wheel_id_;
   bool torque_;
 
   uint16_t dynamixel_limit_max_velocity_;
@@ -92,4 +96,4 @@ class Turtlebot3MotorDriver
   dynamixel::GroupSyncRead *groupSyncReadEncoder_;
 };
 
-#endif // TURTLEBOT3_MOTOR_DRIVER_H_
+#endif // TURTLEBOT3_MOTOR_DRIVER2_H_

@@ -29,10 +29,15 @@ namespace turtlebot3_msgs
       _button_type button;
       typedef bool _torque_type;
       _torque_type torque;
+
+      // Created two extra variables for two additional motors.
       typedef int32_t _left_encoder_type;
-      _left_encoder_type left_encoder;
+      _left_encoder_type front_left_encoder;
+      _left_encoder_type back_left_encoder;
       typedef int32_t _right_encoder_type;
-      _right_encoder_type right_encoder;
+      _right_encoder_type front_right_encoder;
+      _right_encoder_type back_right_encoder;
+
       typedef float _battery_type;
       _battery_type battery;
       enum { BUMPER_FORWARD =  1 };
@@ -56,8 +61,10 @@ namespace turtlebot3_msgs
       led(0),
       button(0),
       torque(0),
-      left_encoder(0),
-      right_encoder(0),
+      front_left_encoder(0),
+      back_left_encoder(0),
+      front_right_encoder(0),
+      back_right_encoder(0),
       battery(0)
     {
     }
@@ -109,26 +116,49 @@ namespace turtlebot3_msgs
       u_torque.real = this->torque;
       *(outbuffer + offset + 0) = (u_torque.base >> (8 * 0)) & 0xFF;
       offset += sizeof(this->torque);
+
+      // Duplicated code to accomondate two additional variables (representing two extra motors)
       union {
         int32_t real;
         uint32_t base;
-      } u_left_encoder;
-      u_left_encoder.real = this->left_encoder;
-      *(outbuffer + offset + 0) = (u_left_encoder.base >> (8 * 0)) & 0xFF;
-      *(outbuffer + offset + 1) = (u_left_encoder.base >> (8 * 1)) & 0xFF;
-      *(outbuffer + offset + 2) = (u_left_encoder.base >> (8 * 2)) & 0xFF;
-      *(outbuffer + offset + 3) = (u_left_encoder.base >> (8 * 3)) & 0xFF;
-      offset += sizeof(this->left_encoder);
+      } u_front_left_encoder;
+      u_front_left_encoder.real = this->front_left_encoder;
+      *(outbuffer + offset + 0) = (u_front_left_encoder.base >> (8 * 0)) & 0xFF;
+      *(outbuffer + offset + 1) = (u_front_left_encoder.base >> (8 * 1)) & 0xFF;
+      *(outbuffer + offset + 2) = (u_front_left_encoder.base >> (8 * 2)) & 0xFF;
+      *(outbuffer + offset + 3) = (u_front_left_encoder.base >> (8 * 3)) & 0xFF;
+      offset += sizeof(this->front_left_encoder);
       union {
         int32_t real;
         uint32_t base;
-      } u_right_encoder;
-      u_right_encoder.real = this->right_encoder;
-      *(outbuffer + offset + 0) = (u_right_encoder.base >> (8 * 0)) & 0xFF;
-      *(outbuffer + offset + 1) = (u_right_encoder.base >> (8 * 1)) & 0xFF;
-      *(outbuffer + offset + 2) = (u_right_encoder.base >> (8 * 2)) & 0xFF;
-      *(outbuffer + offset + 3) = (u_right_encoder.base >> (8 * 3)) & 0xFF;
-      offset += sizeof(this->right_encoder);
+      } u_front_right_encoder;
+      u_front_right_encoder.real = this->front_right_encoder;
+      *(outbuffer + offset + 0) = (u_front_right_encoder.base >> (8 * 0)) & 0xFF;
+      *(outbuffer + offset + 1) = (u_front_right_encoder.base >> (8 * 1)) & 0xFF;
+      *(outbuffer + offset + 2) = (u_front_right_encoder.base >> (8 * 2)) & 0xFF;
+      *(outbuffer + offset + 3) = (u_front_right_encoder.base >> (8 * 3)) & 0xFF;
+      offset += sizeof(this->front_right_encoder);
+      union {
+        int32_t real;
+        uint32_t base;
+      } u_back_left_encoder;
+      u_back_left_encoder.real = this->back_left_encoder;
+      *(outbuffer + offset + 0) = (u_back_left_encoder.base >> (8 * 0)) & 0xFF;
+      *(outbuffer + offset + 1) = (u_back_left_encoder.base >> (8 * 1)) & 0xFF;
+      *(outbuffer + offset + 2) = (u_back_left_encoder.base >> (8 * 2)) & 0xFF;
+      *(outbuffer + offset + 3) = (u_back_left_encoder.base >> (8 * 3)) & 0xFF;
+      offset += sizeof(this->back_left_encoder);
+      union {
+        int32_t real;
+        uint32_t base;
+      } u_back_right_encoder;
+      u_back_right_encoder.real = this->back_right_encoder;
+      *(outbuffer + offset + 0) = (u_back_right_encoder.base >> (8 * 0)) & 0xFF;
+      *(outbuffer + offset + 1) = (u_back_right_encoder.base >> (8 * 1)) & 0xFF;
+      *(outbuffer + offset + 2) = (u_back_right_encoder.base >> (8 * 2)) & 0xFF;
+      *(outbuffer + offset + 3) = (u_back_right_encoder.base >> (8 * 3)) & 0xFF;
+      offset += sizeof(this->back_right_encoder);
+
       union {
         float real;
         uint32_t base;
@@ -193,28 +223,53 @@ namespace turtlebot3_msgs
       u_torque.base |= ((uint8_t) (*(inbuffer + offset + 0))) << (8 * 0);
       this->torque = u_torque.real;
       offset += sizeof(this->torque);
+
+      // Duplicated code to accomondate two additional variables (representing two extra motors)
       union {
         int32_t real;
         uint32_t base;
-      } u_left_encoder;
-      u_left_encoder.base = 0;
-      u_left_encoder.base |= ((uint32_t) (*(inbuffer + offset + 0))) << (8 * 0);
-      u_left_encoder.base |= ((uint32_t) (*(inbuffer + offset + 1))) << (8 * 1);
-      u_left_encoder.base |= ((uint32_t) (*(inbuffer + offset + 2))) << (8 * 2);
-      u_left_encoder.base |= ((uint32_t) (*(inbuffer + offset + 3))) << (8 * 3);
-      this->left_encoder = u_left_encoder.real;
-      offset += sizeof(this->left_encoder);
+      } u_front_left_encoder;
+      u_front_left_encoder.base = 0;
+      u_front_left_encoder.base |= ((uint32_t) (*(inbuffer + offset + 0))) << (8 * 0);
+      u_front_left_encoder.base |= ((uint32_t) (*(inbuffer + offset + 1))) << (8 * 1);
+      u_front_left_encoder.base |= ((uint32_t) (*(inbuffer + offset + 2))) << (8 * 2);
+      u_front_left_encoder.base |= ((uint32_t) (*(inbuffer + offset + 3))) << (8 * 3);
+      this->front_left_encoder = u_front_left_encoder.real;
+      offset += sizeof(this->front_left_encoder);
       union {
         int32_t real;
         uint32_t base;
-      } u_right_encoder;
-      u_right_encoder.base = 0;
-      u_right_encoder.base |= ((uint32_t) (*(inbuffer + offset + 0))) << (8 * 0);
-      u_right_encoder.base |= ((uint32_t) (*(inbuffer + offset + 1))) << (8 * 1);
-      u_right_encoder.base |= ((uint32_t) (*(inbuffer + offset + 2))) << (8 * 2);
-      u_right_encoder.base |= ((uint32_t) (*(inbuffer + offset + 3))) << (8 * 3);
-      this->right_encoder = u_right_encoder.real;
-      offset += sizeof(this->right_encoder);
+      } u_front_right_encoder;
+      u_front_right_encoder.base = 0;
+      u_front_right_encoder.base |= ((uint32_t) (*(inbuffer + offset + 0))) << (8 * 0);
+      u_front_right_encoder.base |= ((uint32_t) (*(inbuffer + offset + 1))) << (8 * 1);
+      u_front_right_encoder.base |= ((uint32_t) (*(inbuffer + offset + 2))) << (8 * 2);
+      u_front_right_encoder.base |= ((uint32_t) (*(inbuffer + offset + 3))) << (8 * 3);
+      this->front_right_encoder = u_front_right_encoder.real;
+      offset += sizeof(this->front_right_encoder);
+      union {
+        int32_t real;
+        uint32_t base;
+      } u_back_left_encoder;
+      u_back_left_encoder.base = 0;
+      u_back_left_encoder.base |= ((uint32_t) (*(inbuffer + offset + 0))) << (8 * 0);
+      u_back_left_encoder.base |= ((uint32_t) (*(inbuffer + offset + 1))) << (8 * 1);
+      u_back_left_encoder.base |= ((uint32_t) (*(inbuffer + offset + 2))) << (8 * 2);
+      u_back_left_encoder.base |= ((uint32_t) (*(inbuffer + offset + 3))) << (8 * 3);
+      this->back_left_encoder = u_back_left_encoder.real;
+      offset += sizeof(this->back_left_encoder);
+      union {
+        int32_t real;
+        uint32_t base;
+      } u_back_right_encoder;
+      u_back_right_encoder.base = 0;
+      u_back_right_encoder.base |= ((uint32_t) (*(inbuffer + offset + 0))) << (8 * 0);
+      u_back_right_encoder.base |= ((uint32_t) (*(inbuffer + offset + 1))) << (8 * 1);
+      u_back_right_encoder.base |= ((uint32_t) (*(inbuffer + offset + 2))) << (8 * 2);
+      u_back_right_encoder.base |= ((uint32_t) (*(inbuffer + offset + 3))) << (8 * 3);
+      this->back_right_encoder = u_back_right_encoder.real;
+      offset += sizeof(this->back_right_encoder);
+
       union {
         float real;
         uint32_t base;
@@ -226,11 +281,11 @@ namespace turtlebot3_msgs
       u_battery.base |= ((uint32_t) (*(inbuffer + offset + 3))) << (8 * 3);
       this->battery = u_battery.real;
       offset += sizeof(this->battery);
-     return offset;
+      return offset;
     }
 
     const char * getType(){ return "turtlebot3_msgs/SensorState"; };
-    const char * getMD5(){ return "7250c1dc0b61c4190e78f528f599285f"; };
+    const char * getMD5(){ return "a3711d40fdcc544d0c30ee6b970b6fad"; };
 
   };
 
