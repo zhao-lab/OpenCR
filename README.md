@@ -6,5 +6,5 @@ This branch is dedicated to the Mini Pittsburgh project, containing modified cod
 
 All relevant files are located at arduino -> opencr_arduino -> opencr -> libraries, in the folders turtlebot3 and turtlebot3_ros_lib.
 
-The turtlebot3_setup_motor (modified from the original): turtlebot3 -> examples -> turtlebot3_burger -> turtlebot_setup_motor.
-The turtlebot3_core (modified from the original): turtlebot3 -> examples -> turtlebot3_burger -> turtlebot_core.
+The turtlebot3_setup_motor (modified from the original): turtlebot3 -> examples -> turtlebot3_setup -> turtlebot3_setup_motor_safeaicmu.
+The turtlebot3_core (modified from the original): turtlebot3 -> examples -> turtlebot3_burger -> turtlebot3_core_safeaicmu.
